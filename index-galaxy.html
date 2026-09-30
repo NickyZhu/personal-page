@@ -394,7 +394,7 @@ function camBase(){
   return [a[0]+(b[0]-a[0])*e, a[1]+(b[1]-a[1])*e, a[2]+(b[2]-a[2])*e];
 }
 
-let mx = W/2, my = H/2, mwx = 0, mwy = 0;
+let mx = -100, my = -100, mwx = 0, mwy = 0;   /* start off-screen: no default hover */
 addEventListener('mousemove', e => {
   mx = e.clientX; my = e.clientY;
   trail.push({ x:mx, y:my, vx:(Math.random()-.5)*.6, vy:(Math.random()-.5)*.6-.3, life:1, r:Math.random()*1.8+.7,
