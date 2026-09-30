@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>朱德川 · 后端开发工程师</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050508;
+  --lime:#c8f542;
+  --ink:#f4f4f0;
+  --dim:#8b8f9c;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:auto}
+body{
+  background:
+    radial-gradient(130% 100% at 72% -10%, #141b3d 0%, transparent 55%),
+    radial-gradient(120% 90% at 6% 110%, #1c1440 0%, transparent 55%),
+    radial-gradient(100% 80% at 50% 50%, #0c1128 0%, #070a18 75%);
+  color:var(--ink);
+  font-family:'Noto Sans SC',sans-serif;font-weight:300;
+  overflow-x:hidden;
+}
+#space{height:600vh}
+canvas#galaxy{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:1;cursor:none;touch-action:none}
+
+/* nebula */
+.neb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;mix-blend-mode:screen;opacity:.45;will-change:transform}
+.n1{width:52vw;height:40vh;left:-8vw;top:-6vh;background:radial-gradient(closest-side,#25347c,transparent 70%);animation:drift1 30s ease-in-out infinite alternate}
+.n2{width:44vw;height:36vh;right:-6vw;top:22vh;background:radial-gradient(closest-side,#4a2480,transparent 70%);opacity:.3;animation:drift2 38s ease-in-out infinite alternate}
+.n3{width:40vw;height:34vh;left:18vw;bottom:-10vh;background:radial-gradient(closest-side,#0e5a63,transparent 70%);opacity:.35;animation:drift3 34s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(6vw,5vh) scale(1.15)}}
+@keyframes drift2{to{transform:translate(-5vw,6vh) rotate(10deg) scale(1.2)}}
+@keyframes drift3{to{transform:translate(5vw,-6vh) scale(1.12)}}
+
+/* cursor */
+#cursor{position:fixed;top:0;left:0;z-index:9999;pointer-events:none;transform:translate(-50%,-50%)}
+#cursor .core{
+  width:10px;height:10px;border-radius:50%;
+  background:#fff;box-shadow:0 0 10px #fff,0 0 26px var(--lime),0 0 60px var(--lime);
+}
+#cursor .halo{
+  position:absolute;inset:-16px;border-radius:50%;
+  border:1.5px solid rgba(200,245,66,.65);
+  transition:transform .25s;
+}
+#cursor.hot .halo{transform:scale(1.5)}
+#cursor .lab{
+  position:absolute;left:24px;top:50%;transform:translateY(-50%);
+  font-family:'Clash Display',sans-serif;font-size:11px;letter-spacing:.22em;
+  color:var(--ink);white-space:nowrap;opacity:0;transition:opacity .25s;
+  background:rgba(8,10,22,.6);padding:5px 12px;border-radius:999px;
+  border:1px solid rgba(200,245,66,.3);backdrop-filter:blur(6px);
+}
+#cursor.hot .lab{opacity:1}
+@media(hover:none){#cursor{display:none}canvas#galaxy{cursor:auto}}
+
+/* hero */
+.hero{
+  position:fixed;inset:0;z-index:5;pointer-events:none;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;padding:0 20px;
+}
+.hero .mask{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(620px,86vw);height:min(380px,50vh);border-radius:50%;
+  background:radial-gradient(closest-side,rgba(6,8,18,.62),rgba(6,8,18,.3) 60%,transparent 76%);
+  z-index:-1;
+}
+.hero .role{
+  font-family:'Clash Display',sans-serif;font-size:clamp(12px,1.4vw,16px);
+  letter-spacing:.42em;color:var(--lime);margin-bottom:2.6vh;
+  text-shadow:0 0 18px rgba(200,245,66,.5);
+}
+.hero h1{
+  font-weight:900;font-size:clamp(64px,12vw,170px);line-height:1.06;letter-spacing:.08em;
+  color:#f4f4f0;
+  text-shadow:0 0 40px rgba(200,245,66,.22),0 4px 40px rgba(0,0,0,.65);
+  will-change:transform,opacity;
+}
+.hero h1 .ch{display:inline-block;transform:translateY(115%);animation:chUp 1s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes chUp{to{transform:translateY(0)}}
+.hero .sub{
+  margin-top:3vh;font-size:clamp(13px,1.4vw,15px);color:#c9cede;
+  letter-spacing:.12em;line-height:2.15;max-width:38em;
+  text-shadow:0 2px 14px rgba(0,0,0,.9);
+}
+.hero .hint{
+  position:absolute;bottom:4.6vh;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:12px;
+  font-family:'Clash Display',sans-serif;font-size:11px;letter-spacing:.3em;color:var(--dim);
+}
+.hero .hint .wire{width:1px;height:40px;background:rgba(139,143,156,.4);position:relative;overflow:hidden}
+.hero .hint .wire::after{content:'';position:absolute;left:0;top:-12px;width:1px;height:12px;background:var(--lime);animation:drop 1.5s ease-in-out infinite}
+@keyframes drop{to{top:48px}}
+
+/* topbar */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:6;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:22px clamp(18px,3.5vw,44px);pointer-events:none;
+}
+.topbar .logo{
+  font-family:'Clash Display',sans-serif;font-weight:600;font-size:16px;
+  letter-spacing:.08em;color:var(--ink);text-shadow:0 0 16px rgba(200,245,66,.3);
+}
+.topbar .logo b{color:var(--lime)}
+.topbar .meta{
+  font-family:'Clash Display',sans-serif;font-size:11px;letter-spacing:.24em;
+  color:var(--dim);text-align:right;line-height:1.9;
+}
+
+/* panel */
+.panel{
+  position:fixed;z-index:8;left:50%;bottom:6vh;transform:translate(-50%,30px);
+  width:min(560px,90vw);
+  border:1px solid rgba(200,245,66,.3);border-radius:18px;
+  background:rgba(8,10,20,.7);backdrop-filter:blur(18px);
+  box-shadow:0 0 50px rgba(200,245,66,.08),0 24px 60px rgba(0,0,0,.5);
+  padding:30px 34px;opacity:0;pointer-events:none;
+  transition:opacity .45s ease,transform .45s cubic-bezier(.16,1,.3,1);
+}
+.panel.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.panel .tag{
+  font-family:'Clash Display',sans-serif;font-size:11px;letter-spacing:.3em;
+  color:var(--lime);margin-bottom:12px;
+}
+.panel h2{font-size:26px;font-weight:900;letter-spacing:.03em;margin-bottom:12px}
+.panel p{font-size:14px;line-height:2;color:#c9cddd}
+.panel .big{
+  font-family:'Clash Display',sans-serif;font-weight:700;color:var(--lime);
+  font-size:52px;line-height:1;margin:8px 0 10px;text-shadow:0 0 26px rgba(200,245,66,.5);
+}
+.panel .big small{font-size:.4em;color:var(--dim);font-weight:500;letter-spacing:.1em}
+
+/* rail */
+.rail{
+  position:fixed;right:clamp(14px,2.5vw,30px);top:50%;transform:translateY(-50%);
+  z-index:6;display:flex;flex-direction:column;gap:10px;align-items:center;pointer-events:none;
+}
+.rail i{width:5px;height:5px;border-radius:50%;background:rgba(139,143,156,.5);transition:background .3s,transform .3s}
+.rail i.on{background:var(--lime);transform:scale(1.5);box-shadow:0 0 12px var(--lime)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<div class="neb n1"></div><div class="neb n2"></div><div class="neb n3"></div>
+<div id="space"></div>
+<canvas id="galaxy"></canvas>
+
+<div id="cursor">
+  <div class="halo"></div>
+  <div class="core"></div>
+  <div class="lab">VIEW · 点击查看</div>
+</div>
+
+<div class="topbar">
+  <div class="logo">ZHU<b>·</b>DECHUAN</div>
+  <div class="meta">BACKEND DEVELOPER<br>GROWTH PLATFORM</div>
+</div>
+
+<div class="hero" id="hero">
+  <div class="mask"></div>
+  <div class="role">后端开发工程师 — 增长平台部</div>
+  <h1 id="bigName" aria-label="朱德川"></h1>
+  <div class="sub">香港城市大学硕士毕业，先后就职于顺丰科技、新加坡华侨银行（OCBC），<br>现任职于路特创新有限公司 · 增长平台部。这座星系里的每颗星球，都是我的一段经历或热爱。</div>
+  <div class="hint"><span class="wire"></span><span>SCROLL OR DRAG TO EXPLORE</span></div>
+</div>
+
+<div class="rail" id="rail"></div>
+
+<div class="panel" id="panel">
+  <div class="tag" id="panelTag"></div>
+  <h2 id="panelTitle"></h2>
+  <div class="big" id="panelBig" style="display:none"></div>
+  <p id="panelText"></p>
+</div>
+
+<script>
+window.onerror = (m, s, l) => { document.title = 'ERR ' + l + ': ' + m; };
+/* ============================== DATA ============================== */
+const NODES = [
+  { id:'me',    x:0,     y:0,    r:26, label:'朱德川',    en:'BACKEND DEVELOPER' },
+  { id:'edu',   x:-420,  y:-480, r:14, label:'香港城市大学', en:'CITYU · M.SC.', tag:'EDUCATION',
+    title:'香港城市大学 · 硕士',
+    text:'硕士研究生毕业。在香港的求学岁月，锻造了独立解决问题的能力，也为后来的跨境职业路径埋下伏笔。' },
+  { id:'sf',    x:-560,  y:-180, r:15, label:'顺丰科技',  en:'SHENZHEN', tag:'CAREER · PAST',
+    title:'顺丰科技有限公司',
+    text:'后端开发工程师 · 物流核心系统。日均千万级运单数据的背后，是分布式服务、消息队列与高并发接口设计的实战沉淀。' },
+  { id:'ocbc',  x:-680,  y:120,  r:15, label:'华侨银行',  en:'OCBC · SINGAPORE', tag:'CAREER · PAST',
+    title:'新加坡华侨银行 OCBC',
+    text:'后端开发 · 银行核心系统。金融级的稳定性要求——事务一致性、容灾降级、审计合规，让每一行代码都经得起最严苛的审视。' },
+  { id:'lute',  x:-380,  y:430,  r:16, label:'路特创新',  en:'CURRENT · NOW', tag:'CAREER · NOW',
+    title:'路特创新有限公司 · 增长平台部',
+    text:'现任职 · 增长平台部后端开发。聚焦增长业务的技术底盘：实验平台、数据 pipeline 与营销自动化系统的架构与迭代。' },
+  { id:'about', x:-60,   y:640,  r:13, label:'关于我',    en:'ABOUT', tag:'ABOUT',
+    title:'关于我',
+    text:'一名痴迷于「把复杂系统做得简单好用」的后端工程师。白天搭建高并发的分布式服务，晚上研究渲染管线与交互设计——这个页面就是两者碰撞的产物。' },
+  { id:'badminton', x:560,  y:-360, r:14, label:'羽毛球', en:'BADMINTON', tag:'HOBBY',
+    title:'羽毛球',
+    text:'每周固定的球场之约。后场跃起扣杀的那 0.3 秒，是和排查出线上 Bug 同款的快感。' },
+  { id:'tennis',    x:780,  y:-60,  r:14, label:'网球',   en:'TENNIS', tag:'HOBBY',
+    title:'网球',
+    text:'从羽毛球切换到网球，最难的不是动作，是忍住不杀球。享受多拍相持中的耐心博弈。' },
+  { id:'photo',     x:660,  y:300,  r:14, label:'街头摄影', en:'STREET PHOTO', tag:'HOBBY',
+    title:'街头摄影',
+    text:'挂着相机在城市里漫游，收藏光线好的路口和有意思的路人。快门是另一种日志系统。' },
+  { id:'coffee',    x:340,  y:580,  r:13, label:'手冲咖啡', en:'POUR OVER', tag:'HOBBY',
+    title:'手冲咖啡',
+    text:'水温、粉水比、注水曲线——和手调 JVM 参数一样，讲究的是对变量的精准控制。' },
+  { id:'game',      x:80,   y:-580, r:15, label:'王者荣耀', en:'HONOR OF KINGS', tag:'HOBBY · JUNGLER',
+    title:'王者荣耀 · 打野', big:'23<small> 连胜</small>',
+    text:'荣耀段位打野，最高 23 连胜。节奏、视野、gank 时机——野区也是一套分布式调度系统。' },
+];
+const LINKS = [
+  ['me','edu'],['me','sf'],['me','ocbc'],['me','lute'],['me','about'],
+  ['me','badminton'],['me','tennis'],['me','photo'],['me','coffee'],['me','game'],
+];
+const SCALE = .62;   /* pull the constellation closer so nothing spills off-screen */
+const STOPS = [
+  [0, 0, 1], [-470, -30, 1.7], [-120, 430, 1.5], [80, -180, 1.25], [560, -20, 1.6], [140, 530, 1.5],
+].map(([x,y,z]) => [x*SCALE, y*SCALE, z]);
+
+/* ============================== CANVAS ============================== */
+const cvs = document.getElementById('galaxy');
+const ctx = cvs.getContext('2d');
+const DPR = Math.min(devicePixelRatio || 1, 2);
+let W = 0, H = 0;
+function resize(){
+  W = innerWidth; H = innerHeight;
+  cvs.width = W * DPR; cvs.height = H * DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener('resize', () => { resize(); initWarp(); });
+
+/* ---- warp starfield: radial streaks like fig.3 ---- */
+let warp = [];
+function initWarp(){
+  warp = [];
+  const N = Math.min(1600, Math.floor(W * H / 900));
+  const maxR = Math.hypot(W, H) * .62;
+  for (let i = 0; i < N; i++) {
+    warp.push({
+      a: Math.random()*Math.PI*2,
+      r: Math.random()*maxR,
+      v: .25 + Math.random()*1.1,
+      maxR,
+      tint: Math.random()<.86 ? '255,255,255' : (Math.random()<.5 ? '190,215,255' : '255,235,190')
+    });
+  }
+}
+/* twinkling dots kept for depth */
+const dots = [];
+for (let i = 0; i < 380; i++) {
+  dots.push({
+    x:(Math.random()-.5)*4400, y:(Math.random()-.5)*3400,
+    z:.2+Math.random()*.6, r:Math.random()*1.4+.3,
+    tw:Math.random()*Math.PI*2,
+    c:Math.random()<.85?'235,238,255':'200,245,66'
+  });
+}
+/* milky way band */
+const band = [];
+{
+  const p0 = [-2000, 950], p1 = [-500, -1200], p2 = [2000, 450];
+  for (let i = 0; i < 700; i++) {
+    const t = Math.random();
+    const ax = (1-t)*(1-t)*p0[0] + 2*(1-t)*t*p1[0] + t*t*p2[0];
+    const ay = (1-t)*(1-t)*p0[1] + 2*(1-t)*t*p1[1] + t*t*p2[1];
+    const spread = 280 + Math.sin(t*Math.PI)*150;
+    band.push({
+      x: ax + (Math.random()-.5)*spread*2,
+      y: ay + (Math.random()-.5)*spread*1.2,
+      z:.3+Math.random()*.5, r:Math.random()*1.1+.2,
+      a:.06+Math.random()*.28, tw:Math.random()*Math.PI*2,
+      c:Math.random()<.6?'215,222,255':(Math.random()<.5?'200,245,66':'170,160,255')
+    });
+  }
+}
+/* shooting stars / trail / novas / pulses */
+const shooters = []; let nextShoot = 2500;
+const trail = [];
+const novas = [];
+const pulses = []; let nextPulse = 800;
+
+const nodes = NODES.map((n,i) => ({ ...n, x:n.x*SCALE, y:n.y*SCALE, px:n.x*SCALE, py:n.y*SCALE, vx:0, vy:0, ph:Math.random()*Math.PI*2, hov:false }));
+const isMe = n => n.id === 'me';
+
+/* split hero name into chars for the rise-in intro */
+const bigName = document.getElementById('bigName');
+[...'朱德川'].forEach((ch, i) => {
+  const s = document.createElement('span');
+  s.className = 'ch';
+  s.textContent = ch;
+  s.style.animationDelay = (.25 + i * .12) + 's';
+  bigName.appendChild(s);
+});
+
+const cam = { x:STOPS[0][0], y:STOPS[0][1], z:STOPS[0][2] };
+let dragOX = 0, dragOY = 0;
+let dragging = false, dragMoved = 0, lastPX = 0, lastPY = 0, velX = 0, velY = 0;
+let focusNode = null, camAnim = null;
+function fitZ(){ return Math.max(.55, Math.min(W/1300, H/950)); }
+
+function scrollProgress(){
+  const max = document.body.scrollHeight - innerHeight;
+  return Math.min(Math.max(scrollY / max, 0), 1);
+}
+function camBase(){
+  const p = scrollProgress() * (STOPS.length - 1);
+  const i = Math.min(Math.floor(p), STOPS.length - 2);
+  const t = p - i, e = t*t*(3-2*t);
+  const a = STOPS[i], b = STOPS[i+1];
+  return [a[0]+(b[0]-a[0])*e, a[1]+(b[1]-a[1])*e, a[2]+(b[2]-a[2])*e];
+}
+
+let mx = W/2, my = H/2, mwx = 0, mwy = 0;
+addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  trail.push({ x:mx, y:my, vx:(Math.random()-.5)*.6, vy:(Math.random()-.5)*.6-.3, life:1, r:Math.random()*1.8+.7,
+               c:Math.random()<.6?'200,245,66':(Math.random()<.5?'140,220,255':'255,255,255') });
+  if (trail.length > 90) trail.shift();
+});
+
+cvs.addEventListener('pointerdown', e => {
+  dragging = true; dragMoved = 0;
+  lastPX = e.clientX; lastPY = e.clientY; velX = velY = 0;
+});
+addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastPX, dy = e.clientY - lastPY;
+  lastPX = e.clientX; lastPY = e.clientY;
+  dragMoved += Math.abs(dx) + Math.abs(dy);
+  const z = cam.z * fitZ();
+  dragOX -= dx / z; dragOY -= dy / z;
+  velX = -dx / z; velY = -dy / z;
+});
+addEventListener('pointerup', e => {
+  if (dragging && dragMoved < 6) handleClick(e.clientX, e.clientY);
+  dragging = false;
+});
+
+const panel = document.getElementById('panel');
+const cursorEl = document.getElementById('cursor');
+const cursorLab = cursorEl.querySelector('.lab');
+
+function handleClick(cx, cy){
+  if (focusNode) { unfocus(); return; }
+  const hit = pickNode(cx, cy);
+  if (hit && !isMe(hit)) { focusOn(hit); return; }
+  const Z = cam.z * fitZ();
+  novas.push({ wx:(cx - W/2)/Z + cam.x - dragOX, wy:(cy - H/2)/Z + cam.y - dragOY, t:0 });
+  for (let i = 0; i < 26; i++) {
+    const a = Math.random()*Math.PI*2, sp = 1.5+Math.random()*4;
+    trail.push({ x:cx, y:cy, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1,
+                 r:Math.random()*2+1, c:Math.random()<.7?'200,245,66':'140,220,255' });
+  }
+}
+function pickNode(cx, cy){
+  const z = cam.z * fitZ();
+  for (const n of nodes) {
+    const sx = (n.px + dragOX - cam.x) * z + W/2;
+    const sy = (n.py + dragOY - cam.y) * z + H/2;
+    const rr = (n.r + 16) * z;
+    if ((cx-sx)**2 + (cy-sy)**2 < rr*rr) return n;
+  }
+  return null;
+}
+function focusOn(n){
+  focusNode = n;
+  camAnim = { t:0, fx:cam.x, fy:cam.y, fz:cam.z, tx:n.x, ty:n.y, tz:Math.max(cam.z, 2.2 / fitZ()) };
+  document.getElementById('panelTag').textContent = n.tag || '';
+  document.getElementById('panelTitle').textContent = n.title || n.label;
+  document.getElementById('panelText').textContent = n.text || '';
+  const bigEl = document.getElementById('panelBig');
+  if (n.big) { bigEl.style.display='block'; bigEl.innerHTML = n.big; }
+  else bigEl.style.display='none';
+  panel.classList.add('show');
+  cursorLab.textContent = '点击返回 RETURN';
+  cursorEl.classList.add('hot');
+}
+function unfocus(){
+  focusNode = null;
+  panel.classList.remove('show');
+  cursorLab.textContent = 'VIEW · 点击查看';
+  cursorEl.classList.remove('hot');
+}
+
+const rail = document.getElementById('rail');
+STOPS.forEach(() => rail.appendChild(document.createElement('i')));
+const hero = document.getElementById('hero');
+
+/* ============================== RENDER ============================== */
+function frame(now){
+  const tt = now * .001;
+  const fz2 = fitZ();
+  const [bx, by, bz] = camBase();
+  if (camAnim) {
+    camAnim.t += .045;
+    const k = Math.min(camAnim.t, 1), e = 1 - Math.pow(1-k, 4);
+    cam.x = camAnim.fx + (camAnim.tx - camAnim.fx)*e;
+    cam.y = camAnim.fy + (camAnim.ty - camAnim.fy)*e;
+    cam.z = camAnim.fz + (camAnim.tz - camAnim.fz)*e;
+    if (k >= 1) camAnim = null;
+  } else {
+    cam.x += (bx - cam.x) * .08;
+    cam.y += (by - cam.y) * .08;
+    cam.z += (bz - cam.z) * .08;
+    if (!dragging) { dragOX += velX; dragOY += velY; velX *= .92; velY *= .92; }
+  }
+  if (focusNode) { dragOX *= .9; dragOY *= .9; }
+  const Z = cam.z * fz2;
+
+  mwx = (mx - W/2) / Z + cam.x - dragOX;
+  mwy = (my - H/2) / Z + cam.y - dragOY;
+
+  ctx.clearRect(0, 0, W, H);
+  const wx2sx = (wx, z) => (wx - (cam.x - dragOX) * z) * Z * (0.55 + z*0.35) + W/2;
+  const wy2sy = (wy, z) => (wy - (cam.y - dragOY) * z) * Z * (0.55 + z*0.35) + H/2;
+
+  /* milky way band */
+  for (const s of band) {
+    const px = wx2sx(s.x, s.z), py = wy2sy(s.y, s.z);
+    if (px < -8 || px > W+8 || py < -8 || py > H+8) continue;
+    const tw = .7 + .3*Math.sin(tt*1.5 + s.tw);
+    ctx.fillStyle = `rgba(${s.c},${s.a * tw})`;
+    ctx.fillRect(px, py, s.r, s.r);
+  }
+  /* twinkling dots */
+  for (const s of dots) {
+    const px = wx2sx(s.x, s.z), py = wy2sy(s.y, s.z);
+    if (px < -8 || px > W+8 || py < -8 || py > H+8) continue;
+    const a = .25 + .5 * (0.6 + 0.4*Math.sin(tt*2 + s.tw));
+    ctx.fillStyle = `rgba(${s.c},${a*s.z})`;
+    ctx.fillRect(px, py, s.r, s.r);
+  }
+
+  /* ---- warp streaks (fig.3) ---- */
+  const cxp = W/2, cyp = H/2;
+  ctx.lineCap = 'round';
+  for (const s of warp) {
+    s.r += s.v;
+    s.v += .006;
+    if (s.r > s.maxR) {
+      s.r = 4 + Math.random()*40;
+      s.v = .25 + Math.random()*1.1;
+      s.a = Math.random()*Math.PI*2;
+    }
+    const x0 = cxp + Math.cos(s.a)*(s.r - s.v*7);
+    const y0 = cyp + Math.sin(s.a)*(s.r - s.v*7);
+    const x1 = cxp + Math.cos(s.a)*s.r;
+    const y1 = cyp + Math.sin(s.a)*s.r;
+    const al = Math.min(.85, .12 + s.v*.28);
+    ctx.strokeStyle = `rgba(${s.tint},${al})`;
+    ctx.lineWidth = s.r < 60 ? .8 : 1.1;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  }
+  ctx.lineCap = 'butt';
+
+  /* shooting stars */
+  if (now > nextShoot) {
+    nextShoot = now + 3500 + Math.random()*5000;
+    const ang = Math.PI*(.15+Math.random()*.25) + (Math.random()<.5?Math.PI:0);
+    shooters.push({ x:Math.random()*W, y:Math.random()*H*.5, vx:Math.cos(ang)*9, vy:Math.abs(Math.sin(ang))*5+2, life:1 });
+  }
+  for (let i = shooters.length-1; i >= 0; i--) {
+    const s = shooters[i];
+    s.x += s.vx; s.y += s.vy; s.life -= .016;
+    if (s.life <= 0 || s.x < -60 || s.x > W+60 || s.y > H+60) { shooters.splice(i,1); continue; }
+    const g2 = ctx.createLinearGradient(s.x - s.vx*8, s.y - s.vy*8, s.x, s.y);
+    g2.addColorStop(0, 'rgba(255,255,255,0)');
+    g2.addColorStop(1, `rgba(255,255,255,${.9*s.life})`);
+    ctx.strokeStyle = g2; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(s.x - s.vx*8, s.y - s.vy*8); ctx.lineTo(s.x, s.y); ctx.stroke();
+  }
+
+  /* node physics */
+  for (const n of nodes) {
+    const hx = n.x + Math.sin(tt*.7 + n.ph) * 6;
+    const hy = n.y + Math.cos(tt*.55 + n.ph) * 6;
+    n.vx += (hx - n.px) * .012;
+    n.vy += (hy - n.py) * .012;
+    const dx = mwx - n.px, dy = mwy - n.py;
+    const d = Math.hypot(dx, dy);
+    const range = 420;
+    if (d < range && d > 1) {
+      const f = (1 - d/range) * .35;
+      n.vx += dx/d * f; n.vy += dy/d * f;
+    }
+    n.vx *= .9; n.vy *= .9;
+    n.px += n.vx; n.py += n.vy;
+    n.hov = false;
+  }
+  if (!focusNode) {
+    const h = pickNode(mx, my);
+    if (h) h.hov = true;
+    cursorEl.classList.toggle('hot', !!h);
+  }
+
+  /* links — straight spokes like the reference */
+  for (const [a, b] of LINKS) {
+    const na = nodes.find(n => n.id === a), nb = nodes.find(n => n.id === b);
+    const ax = (na.px + dragOX - cam.x) * Z + W/2;
+    const ay = (na.py + dragOY - cam.y) * Z + H/2;
+    const bxx = (nb.px + dragOX - cam.x) * Z + W/2;
+    const byy = (nb.py + dragOY - cam.y) * Z + H/2;
+    ctx.strokeStyle = 'rgba(200,245,66,.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bxx, byy); ctx.stroke();
+  }
+  /* single travelling pulse */
+  if (now > nextPulse && pulses.length < 2) {
+    nextPulse = now + 900 + Math.random()*1400;
+    const [pa, pb] = LINKS[Math.random()*LINKS.length|0];
+    pulses.push({ a:nodes.find(n=>n.id===pa), b:nodes.find(n=>n.id===pb), t:0, sp:.006+Math.random()*.008 });
+  }
+  for (let i = pulses.length-1; i >= 0; i--) {
+    const p = pulses[i];
+    p.t += p.sp * (Z*.6+.4);
+    if (p.t >= 1) { pulses.splice(i,1); continue; }
+    const ax = (p.a.px + dragOX - cam.x) * Z + W/2;
+    const ay = (p.a.py + dragOY - cam.y) * Z + H/2;
+    const bxx = (p.b.px + dragOX - cam.x) * Z + W/2;
+    const byy = (p.b.py + dragOY - cam.y) * Z + H/2;
+    const px = ax + (bxx-ax)*p.t;
+    const py = ay + (byy-ay)*p.t;
+    ctx.fillStyle = 'rgba(220,255,120,.95)';
+    ctx.shadowColor = 'rgba(200,245,66,.9)'; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  /* nodes — simple white core + lime glow */
+  for (const n of nodes) {
+    const sx = (n.px + dragOX - cam.x) * Z + W/2;
+    const sy = (n.py + dragOY - cam.y) * Z + H/2;
+    if (sx < -160 || sx > W+160 || sy < -160 || sy > H+160) continue;
+    const isFocus = focusNode === n;
+    const pulse = 1 + Math.sin(tt*2 + n.ph) * .08;
+    const scale = (n.hov ? 1.25 : 1) * (isFocus ? 1.3 : 1);
+    const r = n.r * Z * pulse * scale;
+
+    /* lime glow */
+    const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r*3.4);
+    g.addColorStop(0, (n.hov || isFocus) ? 'rgba(200,245,66,.55)' : 'rgba(200,245,66,.32)');
+    g.addColorStop(1, 'rgba(200,245,66,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(sx, sy, r*3.4, 0, Math.PI*2); ctx.fill();
+
+    /* white core */
+    ctx.fillStyle = n.hov || isFocus ? '#eaffb0' : 'rgba(244,244,240,.95)';
+    ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2); ctx.fill();
+
+    if (isMe(n)) continue;   /* center star: canvas label skipped, DOM name sits on top */
+    const ly = sy + r + 22;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = n.hov ? '#d8ff70' : 'rgba(244,244,240,.95)';
+    ctx.font = `${n.hov?700:500} 14px 'Noto Sans SC', sans-serif`;
+    ctx.fillText(n.label, sx, ly);
+    ctx.fillStyle = 'rgba(154,160,181,.9)';
+    ctx.font = `500 9.5px 'Clash Display', sans-serif`;
+    ctx.fillText(n.en, sx, ly + 16);
+  }
+
+  /* supernovas */
+  for (let i = novas.length-1; i >= 0; i--) {
+    const nv = novas[i];
+    nv.t += .03;
+    if (nv.t >= 1) { novas.splice(i,1); continue; }
+    const sx = (nv.wx + dragOX - cam.x) * Z + W/2;
+    const sy = (nv.wy + dragOY - cam.y) * Z + H/2;
+    const r = nv.t * 90 * Z;
+    ctx.strokeStyle = `rgba(200,245,66,${(1-nv.t)*.8})`;
+    ctx.lineWidth = 2 * (1-nv.t) + .5;
+    ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = `rgba(255,255,255,${(1-nv.t)*.6})`;
+    ctx.beginPath(); ctx.arc(sx, sy, 4*(1-nv.t), 0, Math.PI*2); ctx.fill();
+  }
+
+  /* cursor trail */
+  for (let i = trail.length-1; i >= 0; i--) {
+    const s = trail[i];
+    s.life -= .022;
+    if (s.life <= 0) { trail.splice(i,1); continue; }
+    s.x += s.vx; s.y += s.vy;
+    ctx.fillStyle = `rgba(${s.c},${s.life*.8})`;
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r*s.life, 0, Math.PI*2); ctx.fill();
+  }
+
+  cursorEl.style.transform = `translate(${mx}px,${my}px) translate(-50%,-50%)`;
+
+  const hp = Math.min(scrollY / (innerHeight * .7), 1);
+  hero.style.opacity = 1 - hp*hp;
+  bigName.style.transform = `scale(${1 + hp*1.8})`;
+  bigName.style.opacity = 1 - hp*1.4;
+
+  const idx = Math.round(scrollProgress() * (STOPS.length - 1));
+  [...rail.children].forEach((el, i) => el.classList.toggle('on', i === idx));
+
+  requestAnimationFrame(frame);
+}
+resize();
+initWarp();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
