@@ -374,6 +374,7 @@ const pulses = [];
 let nextPulse = 800;
 
 const nodes = NODES.map((n,i) => ({ ...n, px:n.x, py:n.y, vx:0, vy:0, ph:Math.random()*Math.PI*2, hov:false }));
+const isMe = n => n.id === 'me';
 
 const cam = { x:STOPS[0][0], y:STOPS[0][1], z:STOPS[0][2] };
 let dragOX = 0, dragOY = 0;
@@ -638,9 +639,11 @@ function frame(now){
   /* hover detect */
   if (!focusNode) {
     const h = pickNode(mx, my);
-    const hh = (h && !isMe(h)) ? h : null;   /* center star never shows VIEW pill */
-    if (hh) hh.hov = true;
-    cursorEl.classList.toggle('hot', !!hh);
+    if (h) {
+      h.hov = true;
+      cursorLab.textContent = isMe(h) ? 'VIEW · 我是彩蛋' : 'VIEW · 点击查看';
+    }
+    cursorEl.classList.toggle('hot', !!h);
   }
 
   /* links */
