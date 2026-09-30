@@ -425,9 +425,12 @@ const cursorEl = document.getElementById('cursor');
 const cursorLab = cursorEl.querySelector('.lab');
 
 function handleClick(cx, cy){
-  if (focusNode) { unfocus(); return; }
   const hit = pickNode(cx, cy);
-  if (hit) { focusOn(hit); return; }
+  if (hit) {
+    if (hit === focusNode) { unfocus(); return; }   /* click focused node again -> return */
+    focusOn(hit); return;
+  }
+  if (focusNode) { unfocus(); return; }
   /* supernova on empty space */
   const Z = cam.z * fitZ();
   novas.push({ wx:(cx - W/2)/Z + cam.x - dragOX, wy:(cy - H/2)/Z + cam.y - dragOY, t:0 });
@@ -449,6 +452,7 @@ function pickNode(cx, cy){
 }
 function focusOn(n){
   focusNode = n;
+  camAnim = null;   /* cancel in-flight animation when switching */
   camAnim = { t:0, fx:cam.x, fy:cam.y, fz:cam.z, tx:n.x, ty:n.y, tz:Math.max(cam.z, 2.2 / fitZ()) };
   document.getElementById('panelTag').textContent = n.tag || '';
   document.getElementById('panelTitle').textContent = n.title || n.label;
@@ -561,6 +565,10 @@ function frame(now){
     cam.y = camAnim.fy + (camAnim.ty - camAnim.fy)*e;
     cam.z = camAnim.fz + (camAnim.tz - camAnim.fz)*e;
     if (k >= 1) camAnim = null;
+  } else if (focusNode) {
+    cam.x += (focusNode.px - cam.x) * .1;   /* hold position on the focused node */
+    cam.y += (focusNode.py - cam.y) * .1;
+    if (!dragging) { velX *= .9; velY *= .9; }
   } else {
     cam.x += (bx - cam.x) * .08;
     cam.y += (by - cam.y) * .08;
@@ -760,8 +768,10 @@ function frame(now){
 
   /* hero fade */
   const hp = Math.min(scrollY / (innerHeight * .7), 1);
-  hero.style.opacity = 1 - hp;
+  const heroOp = focusNode ? 0 : 1 - hp;   /* hide hero text & mask while a node is focused */
+  hero.style.opacity = heroOp;
   hero.style.transform = `translateY(${-hp * 60}px) scale(${1 - hp*.06})`;
+  hero.style.visibility = heroOp <= 0 ? 'hidden' : 'visible';
 
   /* rail */
   const idx = Math.round(scrollProgress() * (STOPS.length - 1));
